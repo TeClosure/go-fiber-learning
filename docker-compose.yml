@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.9"
 services:
   backend:
     build: .
@@ -20,4 +20,3 @@ services:
       - .dbdata:/var/lib/mysql
     ports:
       - 33066:3306
-    
