@@ -8,7 +8,6 @@ import (
     "admin/src/models"
 
     "github.com/gofiber/fiber/v2"
-    "golang.org/x/crypto/bcrypt"
     "github.com/dgrijalva/jwt-go"
 )
 
@@ -26,15 +25,14 @@ func Register(ctx *fiber.Ctx) error {
         })
     }
 
-    pwd, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 12)
-
     user := models.User{
         FirstName:      data["first_name"],
         LastName:       data["last_name"],
         Email:          data["email"],
-        Password:       pwd,
         IsAmbassdor:    false,
     }
+
+    user.SetPassword(data["password"])
 
     database.DB.Create(&user)
 
@@ -59,15 +57,15 @@ func Login(ctx *fiber.Ctx) error {
     }
 
     // Check Password
-    err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"]))
+    err := user.ComparePassword(data["password"])
     if err != nil {
         ctx.Status(fiber.StatusBadRequest)
         return ctx.JSON(fiber.Map {
             "message": "There is an error in your password.",
         })
     }
-    // return ctx.JSON(user)
 
+    // Token Issuance
     payload := jwt.StandardClaims {
         Subject:    strconv.Itoa(int(user.ID)),
         ExpiresAt:  time.Now().Add(time.Hour * 24).Unix(),
@@ -82,5 +80,17 @@ func Login(ctx *fiber.Ctx) error {
         })
     }
 
-    return ctx.JSON(token)
+    // Save to Cookie
+    cookie := fiber.Cookie {
+        Name:       "jwt",
+        Value:      token,
+        Expires:    time.Now().Add(time.Hour * 24),
+        HTTPOnly:   true,
+    }
+
+    ctx.Cookie(&cookie)
+
+    return ctx.JSON(fiber.Map {
+        "message": "Success for save to cookie.",
+    })
 }
