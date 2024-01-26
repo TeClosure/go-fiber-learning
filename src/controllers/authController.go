@@ -36,3 +36,31 @@ func Register(ctx *fiber.Ctx) error {
 
     return ctx.JSON(user)
 }
+
+func Login(ctx *fiber.Ctx) error {
+    var data map[string]string
+
+    if err := ctx.BodyParser(&data); err != nil {
+        return err
+    }
+
+    var user models.User
+    database.DB.Where("email = ?", data["email"]).First(&user)
+
+    if user.ID == 0 {
+        ctx.Status(fiber.StatusBadRequest)
+        return ctx.JSON(fiber.Map {
+            "message": "User not found.",
+        })
+    }
+
+    // Check Password
+    err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"]))
+    if err != nil {
+        ctx.Status(fiber.StatusBadRequest)
+        return ctx.JSON(fiber.Map {
+            "message": "There is an error in your password.",
+        })
+    }
+    return ctx.JSON(user)
+}
