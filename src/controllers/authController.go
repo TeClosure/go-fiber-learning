@@ -1,11 +1,15 @@
 package controllers
 
 import (
+    "strconv"
+    "time"
+
     "admin/src/database"
     "admin/src/models"
 
     "github.com/gofiber/fiber/v2"
     "golang.org/x/crypto/bcrypt"
+    "github.com/dgrijalva/jwt-go"
 )
 
 func Register(ctx *fiber.Ctx) error {
@@ -62,5 +66,21 @@ func Login(ctx *fiber.Ctx) error {
             "message": "There is an error in your password.",
         })
     }
-    return ctx.JSON(user)
+    // return ctx.JSON(user)
+
+    payload := jwt.StandardClaims {
+        Subject:    strconv.Itoa(int(user.ID)),
+        ExpiresAt:  time.Now().Add(time.Hour * 24).Unix(),
+    }
+
+    token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, payload).SignedString([]byte("secret"))
+
+    if err != nil {
+        ctx.Status(fiber.StatusBadRequest)
+        return ctx.JSON(fiber.Map {
+            "message": "Your login information is incorrect.",
+        })
+    }
+
+    return ctx.JSON(token)
 }
