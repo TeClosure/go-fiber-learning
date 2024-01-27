@@ -94,3 +94,30 @@ func Login(ctx *fiber.Ctx) error {
         "message": "Success for save to cookie.",
     })
 }
+
+func User(ctx *fiber.Ctx) error {
+    cookie := ctx.Cookies("jwt")
+
+    token, err := jwt.ParseWithClaims(
+        cookie,
+        &jwt.StandardClaims{},
+        func(token *jwt.Token) (interface{}, error) {
+            return []byte("secret"), nil
+        },
+    )
+
+    if err != nil {
+        ctx.Status(fiber.StatusUnauthorized) // 401
+        return ctx.JSON(fiber.Map {
+            "message": "Not authenticated.",
+        })
+    }
+
+    // Get userid
+    payload := token.Claims.(*jwt.StandardClaims)
+
+    // Search User
+    var user models.User
+    database.DB.Where("id = ?", payload.Subject).First(&user)
+    return ctx.JSON(user)
+}
