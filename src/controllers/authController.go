@@ -129,3 +129,55 @@ func User(ctx *fiber.Ctx) error {
 
     return ctx.JSON(user)
 }
+
+func UpdateInfo(ctx *fiber.Ctx) error {
+    var data map[string]string
+
+    //parsing request data
+    if err := ctx.BodyParser(&data); err != nil {
+        return err
+    }
+
+    // get id from cookie
+    id, _ := middleware.GetUserID(ctx)
+    user := models.User{
+        ID:         id,
+        FirstName:  data["first_name"],
+        LastName:   data["last_name"],
+        Email:      data["emai"],
+    }
+
+    // update user info
+    database.DB.Model(&user).Updates(&user)
+    return ctx.JSON(user)
+}
+
+func UpdatePassword(ctx *fiber.Ctx) error {
+    var data map[string]string
+
+    // parsing request data
+    if err := ctx.BodyParser(&data); err != nil {
+        return err
+    }
+
+    // check password
+    if data["password"] != data["password_confirm"] {
+        ctx.Status(fiber.StatusBadRequest) //400
+        return ctx.JSON(fiber.Map {
+            "message": "There is an error in your password.",
+        })
+    }
+
+    // get id from cookie
+    id, _ :=middleware.GetUserID(ctx)
+    user := models.User {
+        ID: id,
+    }
+
+    // set password
+    user.SetPassword(data["password"])
+
+    // update user info
+    database.DB.Model(&user).Updates(&user)
+    return ctx.JSON(user)
+}
