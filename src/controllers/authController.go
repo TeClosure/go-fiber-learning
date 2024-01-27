@@ -34,7 +34,13 @@ func Register(ctx *fiber.Ctx) error {
 
     user.SetPassword(data["password"])
 
-    database.DB.Create(&user)
+    result := database.DB.Create(&user)
+    if result.Error != nil {
+        ctx.Status(fiber.StatusBadRequest)
+        return ctx.JSON(fiber.Map {
+            "message": "The Email is already registered",
+        })
+    }
 
     return ctx.JSON(user)
 }
