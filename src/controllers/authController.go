@@ -1,10 +1,12 @@
 package controllers
 
 import (
+    "log"
     "strconv"
     "time"
 
     "admin/src/database"
+    "admin/src/middleware"
     "admin/src/models"
 
     "github.com/gofiber/fiber/v2"
@@ -102,6 +104,7 @@ func Login(ctx *fiber.Ctx) error {
 }
 
 func Logout(ctx *fiber.Ctx) error {
+    log.Println("Do Logout")
     // Clear cookie
     cookie := fiber.Cookie {
         Name:   "jwt",
@@ -117,28 +120,12 @@ func Logout(ctx *fiber.Ctx) error {
 }
 
 func User(ctx *fiber.Ctx) error {
-    cookie := ctx.Cookies("jwt")
+    log.Println("Do User")
+    id, _ := middleware.GetUserID(ctx)
 
-    token, err := jwt.ParseWithClaims(
-        cookie,
-        &jwt.StandardClaims{},
-        func(token *jwt.Token) (interface{}, error) {
-            return []byte("secret"), nil
-        },
-    )
-
-    if err != nil {
-        ctx.Status(fiber.StatusUnauthorized) // 401
-        return ctx.JSON(fiber.Map {
-            "message": "Not authenticated.",
-        })
-    }
-
-    // Get userid
-    payload := token.Claims.(*jwt.StandardClaims)
-
-    // Search User
+    // search user
     var user models.User
-    database.DB.Where("id = ?", payload.Subject).First(&user)
+    database.DB.Where("id = ?", id).First(&user)
+
     return ctx.JSON(user)
 }
