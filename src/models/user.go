@@ -5,12 +5,12 @@ import (
 )
 
 type User struct {
-	ID	uint
-	FirstName string
-	LastName string
-	Email string
-	Password []byte
-	IsAmbassdor bool
+	ID	uint			`json:"id"`
+	FirstName 	string	`json:"first_name"`
+	LastName 	string	`json:"last_name`
+	Email 		string	`json:"email"`
+	Password 	[]byte	`json:"-"`
+	IsAmbassdor bool	`json:"-"`
 }
 
 func (u *User) SetPassword(pwd string) {
