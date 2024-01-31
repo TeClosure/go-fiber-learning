@@ -10,7 +10,7 @@ type User struct {
 	LastName 	string	`json:"last_name`
 	Email 		string	`json:"email" gorm:"unique"`
 	Password 	[]byte	`json:"-"`
-	IsAmbassdor bool	`json:"-"`
+	IsAmbassador bool	`json:"-"`
 }
 
 func (u *User) SetPassword(pwd string) {
